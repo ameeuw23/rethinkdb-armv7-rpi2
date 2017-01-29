@@ -1,24 +1,17 @@
-FROM armv7/armhf-ubuntu_core
+FROM debian:jessie
 
-MAINTAINER Michael Bruyninckx <michael@modul8.com>
+MAINTAINER Daniel Alan Miller <dalanmiller@rethinkdb.com>
 
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    curl \
-    g++ \
-    libboost-dev \
-    libprotobuf-dev \
-    m4 \
-    protobuf-compiler \
-    python \
-    wget
+# Add the RethinkDB repository and public key
+# "RethinkDB Packaging <packaging@rethinkdb.com>" http://download.rethinkdb.com/apt/pubkey.gpg
+RUN apt-key adv --keyserver pgp.mit.edu --recv-keys 1614552E5765227AEC39EFCFA7E00EF33A8F2399
+RUN echo "deb http://download.rethinkdb.com/apt jessie main" > /etc/apt/sources.list.d/rethinkdb.list
 
-RUN wget http://download.rethinkdb.com/dist/rethinkdb-latest.tgz \
-    && tar -zxvf rethinkdb-latest.tgz \
-    && cd rethinkdb-* \
-    && ./configure --with-system-malloc --allow-fetch \
-    && make \
-    && make install
+ENV RETHINKDB_PACKAGE_VERSION 2.3.5~0jessie
+
+RUN apt-get update \
+	&& apt-get install -y rethinkdb=$RETHINKDB_PACKAGE_VERSION \
+	&& rm -rf /var/lib/apt/lists/*
 
 VOLUME ["/data"]
 
@@ -26,4 +19,5 @@ WORKDIR /data
 
 CMD ["rethinkdb", "--bind", "all"]
 
+#   process cluster webui
 EXPOSE 28015 29015 8080
